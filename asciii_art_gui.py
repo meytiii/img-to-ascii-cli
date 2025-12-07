@@ -3,18 +3,37 @@ from tkinter import filedialog, messagebox
 from PIL import Image
 import webbrowser
 import os
+import sys
 
 # --- Configuration & Constants ---
 APP_VERSION = "1.0.1"
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("dark-blue")
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 class ASCIIArtApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # --- ICON SETUP ---
+        # This applies the icon to the main window and taskbar
+        try:
+            icon_path = resource_path("icon.ico")
+            self.iconbitmap(icon_path)
+        except Exception:
+            pass # Use default if icon is missing
+
         # Window Setup
-        self.title(f"MeyTiii's ASCII Art Generator (v{APP_VERSION})") # Added version to window title
+        self.title(f"MeyTiii's ASCII Art Generator (v{APP_VERSION})")
         self.geometry("900x700")
         
         # Grid Configuration
@@ -100,14 +119,19 @@ class ASCIIArtApp(ctk.CTk):
         help_window.title("About")
         help_window.geometry("400x300")
         help_window.attributes("-topmost", True)
+        
+        # --- Apply Icon to Popup too ---
+        try:
+            help_window.iconbitmap(resource_path("icon.ico"))
+        except Exception:
+            pass
+        # -------------------------------
 
         label = ctk.CTkLabel(help_window, text="Made by MeyTiii", font=ctk.CTkFont(size=18, weight="bold"))
         label.pack(pady=(30, 5))
 
-        # --- NEW: Version Label ---
         version_label = ctk.CTkLabel(help_window, text=f"Version {APP_VERSION}", text_color="gray50")
         version_label.pack(pady=(0, 10))
-        # --------------------------
 
         sub_label = ctk.CTkLabel(help_window, text="If you enjoyed, visit my GitHub and drop a star!", text_color="gray70")
         sub_label.pack(pady=5)
