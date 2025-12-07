@@ -5,7 +5,7 @@ import webbrowser
 import os
 
 # --- Configuration & Constants ---
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("dark-blue")
 
