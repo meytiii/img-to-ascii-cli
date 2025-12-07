@@ -12,4 +12,4 @@ A lightweight Python command-line tool that converts images into ASCII art direc
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/img-to-ascii-cli.git
+   git clone https://github.com/meytiii/img-to-ascii-cli.git
