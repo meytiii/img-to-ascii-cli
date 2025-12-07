@@ -1,0 +1,125 @@
+import customtkinter as ctk
+from tkinter import filedialog, messagebox
+from PIL import Image
+import webbrowser
+import os
+
+# --- Configuration & Theme ---
+ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
+ctk.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
+
+class ASCIIArtApp(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+
+        # Window Setup
+        self.title("MeyTiii's ASCII Art Generator")
+        self.geometry("900x700")
+        
+        # Grid Configuration
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1) # The text area expands
+
+        # --- Header Section ---
+        self.header_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.header_frame.grid(row=0, column=0, padx=20, pady=20, sticky="ew")
+
+        self.title_label = ctk.CTkLabel(self.header_frame, text="🎨 Image to ASCII Converter", font=ctk.CTkFont(size=20, weight="bold"))
+        self.title_label.pack(side="left", padx=20, pady=10)
+
+        self.browse_button = ctk.CTkButton(self.header_frame, text="Browse Image", command=self.load_image, font=ctk.CTkFont(weight="bold"))
+        self.browse_button.pack(side="right", padx=20, pady=10)
+
+        # --- Main Display Section ---
+        self.textbox = ctk.CTkTextbox(self, font=("Courier New", 12)) # Monospace font is crucial for ASCII
+        self.textbox.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="nsew")
+        
+        # Start as disabled (Read-Only)
+        self.textbox.insert("0.0", "\n\n      Please select an image to generate ASCII art...")
+        self.textbox.configure(state="disabled")
+
+        # --- Footer Section ---
+        self.footer_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="transparent")
+        self.footer_frame.grid(row=2, column=0, padx=20, pady=(0, 20), sticky="ew")
+
+        # Help Button
+        self.help_button = ctk.CTkButton(self.footer_frame, text="Help / About", command=self.show_help, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"))
+        self.help_button.pack(side="left")
+
+        # Copy Button
+        self.copy_button = ctk.CTkButton(self.footer_frame, text="Copy to Clipboard", command=self.copy_to_clipboard, state="disabled")
+        self.copy_button.pack(side="right")
+
+    # --- Logic ---
+
+    def load_image(self):
+        file_path = filedialog.askopenfilename(
+            filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp;*.tiff")]
+        )
+
+        if not file_path:
+            return # User cancelled
+
+        try:
+            image = Image.open(file_path)
+            ascii_art = self.convert_to_ascii(image)
+            self.display_art(ascii_art)
+            self.copy_button.configure(state="normal") # Enable copy button
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not process image.\nReason: {e}")
+
+    def convert_to_ascii(self, image, new_width=100):
+        # 1. Resize
+        width, height = image.size
+        aspect_ratio = height / width / 1.65
+        new_height = int(new_width * aspect_ratio)
+        resized_image = image.resize((new_width, new_height))
+        
+        # 2. Grayscale
+        grayscale_image = resized_image.convert("L")
+        
+        # 3. Map to characters
+        chars = ["@", "#", "S", "%", "?", "*", "+", ";", ":", ",", "."]
+        pixels = grayscale_image.getdata()
+        new_pixels = [chars[pixel // 25] for pixel in pixels]
+        new_pixels = "".join(new_pixels)
+        
+        # 4. Format
+        pixel_count = len(new_pixels)
+        ascii_image = "\n".join([new_pixels[index:(index + new_width)] for index in range(0, pixel_count, new_width)])
+        return ascii_image
+
+    def display_art(self, art):
+        self.textbox.configure(state="normal") # Enable writing
+        self.textbox.delete("0.0", "end")      # Clear previous
+        self.textbox.insert("0.0", art)        # Insert new
+        self.textbox.configure(state="disabled") # Make read-only again
+
+    def copy_to_clipboard(self):
+        art = self.textbox.get("0.0", "end")
+        self.clipboard_clear()
+        self.clipboard_append(art)
+        messagebox.showinfo("Success", "ASCII Art copied to clipboard!")
+
+    def show_help(self):
+        # Create a beautiful popup window
+        help_window = ctk.CTkToplevel(self)
+        help_window.title("About")
+        help_window.geometry("400x250")
+        help_window.attributes("-topmost", True) # Keep on top
+
+        label = ctk.CTkLabel(help_window, text="Made by MeyTiii", font=ctk.CTkFont(size=18, weight="bold"))
+        label.pack(pady=(40, 10))
+
+        sub_label = ctk.CTkLabel(help_window, text="If you enjoyed, visit my GitHub and drop a star!", text_color="gray70")
+        sub_label.pack(pady=5)
+
+        # The Hyperlink Button
+        link_button = ctk.CTkButton(help_window, text="🔗 github.com/meytiii/img-to-ascii-cli", 
+                                    command=lambda: webbrowser.open("https://github.com/meytiii/img-to-ascii-cli"),
+                                    fg_color="transparent", text_color="#3B8ED0", hover_color="#141414")
+        link_button.pack(pady=20)
+
+if __name__ == "__main__":
+    app = ASCIIArtApp()
+    app.mainloop()
